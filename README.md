@@ -41,7 +41,7 @@ Ensure you have the following installed:
 ### Installation Steps
 1. Clone this repository:
    ```sh
-   git clone https://github.com/your-repo/cortex-ai-snowflake-etl-chatbot.git
+   git clone [https://github.com/your-repo/cortex-ai-snowflake-etl-chatbot.git](https://github.com/shubh6-max/ETL_TOOL.git)
    cd cortex-ai-snowflake-etl-chatbot
    ```
 2. Create a virtual environment and activate it:
