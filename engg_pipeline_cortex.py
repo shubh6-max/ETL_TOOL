@@ -217,62 +217,15 @@ if st.session_state.page == 3:
     
     user_input = st.chat_input("Type your message...")
     if user_input:
-        try:
-            # Query Snowflake LLM and get a cleaned DataFrame
-            response = query_snowflake_llm(user_input + " and Output only the final cleaned table, with no additional text or explanation.", df)
-
-            # Ensure response is a DataFrame
-            if not isinstance(response, pd.DataFrame):
-                st.error("❌ The response is not a DataFrame. Please check the output.")
+        response = query_snowflake_llm(user_input+" "+"and Output only the final cleaned table, with no additional text or explanation.", df)
+        # response=llm_table_to_csv(response)
+        st.session_state.chat_history.append(("🧑", user_input))
+        st.session_state.chat_history.append(("🤖", response))
+        for role, message in st.session_state.chat_history:
+            if role == "🧑":
+                st.chat_message("user").write(message)
             else:
-                # Update chat history
-                st.session_state.chat_history.append(("🧑", user_input))
-                st.session_state.chat_history.append(("🤖", "✅ Dataframe generated successfully."))
-
-                # Display chat history
-                for role, message in st.session_state.chat_history:
-                    if role == "🧑":
-                        st.chat_message("user").write(message)
-                    else:
-                        st.chat_message("assistant").write(message)
-
-                # Proceed with Snowflake upload
-                conn = st.session_state.get("db_connection")
-                if conn:
-                    cursor = conn.cursor()
-
-                    # Get table name from user
-                    table_name = st.text_input("Enter table name for cleaned data", "cleaned_dataset")
-
-                    if st.button("Upload to Snowflake"):
-                        try:
-                            # Ensure column names are safe for SQL
-                            columns = ', '.join([f'"{col}" STRING' for col in response.columns])
-
-                            # Create table in Snowflake
-                            create_table_query = f"CREATE OR REPLACE TABLE {table_name} ({columns})"
-                            cursor.execute(create_table_query)
-
-                            # Prepare data for bulk insert
-                            rows = response.values.tolist()  # Handle NaN values
-
-                            # Generate parameterized query for bulk insert
-                            placeholders = ", ".join(["%s"] * len(response.columns))
-                            insert_query = f"INSERT INTO {table_name} VALUES ({placeholders})"
-
-                            # Execute batch insert
-                            cursor.executemany(insert_query, rows)
-
-                            st.success(f"✅ Data uploaded successfully to Snowflake table: {table_name}")
-
-                        except Exception as e:
-                            st.error(f"❌ Upload failed: {e}")
-
-                else:
-                    st.error("❌ No Snowflake connection found. Please connect first.")
-
-        except Exception as e:
-            st.error(f"❌ Query failed: {e}")
+                st.chat_message("assistant").write(message)
     
     st.subheader("🔧 ETL Operations")
     col1, col2 = st.columns(2)
